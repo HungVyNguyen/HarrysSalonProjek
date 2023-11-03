@@ -1,8 +1,8 @@
 package HarrysSalon;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.io.File;
+import java.time.*;
 
 public class AvaliableTimes {
     private List<Date> reserveredeTider;
@@ -12,20 +12,35 @@ public class AvaliableTimes {
         reserveredeTider = new ArrayList<>();
     }
 
-    public List<Date> findLedigeTider(Date dato, int antalMinutterMellemAftaler){
-        List<Date> ledigeTider = new ArrayList<>();
+    public ArrayList<LocalTime> findLedigeTider(LocalDate day){
+        var ledigeTider = new ArrayList<LocalTime>();
+        var unavailable = new ArrayList<LocalTime>();
 
-        Date startTid = setTidspunkt(dato, 10, 0);
-        Date slutTid = setTidspunkt(dato, 18, 0);
-
-        Date nuværendeTid = startTid;
-
-        while (nuværendeTid.before(slutTid)) {
-            if (!erTidspunktReserveret(nuværendeTid, antalMinutterMellemAftaler)) {
-                ledigeTider.add(nuværendeTid);
+        try {
+            Scanner file = new Scanner(new File("ReservationList.csv"));
+            while (file.hasNextLine()) {
+                Scanner currentLine = new Scanner (file.nextLine());
+                currentLine.useDelimiter(";");
+                currentLine.next();
+                LocalDateTime dateTime = LocalDateTime.parse(currentLine.next());
+                LocalDate date = LocalDate.of(dateTime.getYear(), dateTime.getMonth(), dateTime.getDayOfMonth());
+                if (date.isEqual(LocalDate.now())) {
+                    LocalTime time = LocalTime.of(dateTime.getHour(), dateTime.getMinute());
+                    unavailable.add(time);
+                }
             }
-            nuværendeTid = tilføjMinutter(nuværendeTid, antalMinutterMellemAftaler);
+            file.close();
+        } catch (Exception e) {}
+
+        LocalTime i = LocalTime.of(10, 0);
+        while (!i.equals(LocalTime.of(18, 0))) {
+            if (unavailable.contains(i)) {
+                continue;
+            }
+            ledigeTider.add(i);
+            i = i.plusMinutes(30);
         }
+
         return ledigeTider;
     }
 
@@ -75,4 +90,5 @@ public class AvaliableTimes {
     }
 
 }
+
 
